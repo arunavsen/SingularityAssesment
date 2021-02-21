@@ -80,7 +80,7 @@ namespace SingularityAssesment.Controllers
             return user;
 
         }
-
+        [AllowAnonymous]
         [HttpPost("authenticate")]
         public IActionResult Authenticate([FromBody] AuthenticationDto model)
         {
