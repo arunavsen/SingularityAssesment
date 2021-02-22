@@ -25,12 +25,10 @@ namespace SingularityAssesment.Controllers
         private readonly SingularityAssesmentContext _context;
         private readonly AppSettings _appSettings;
 
-
         public UserController(SingularityAssesmentContext context, IOptions<AppSettings> appSettings)
         {
             _context = context;
             _appSettings = appSettings.Value;
-
         }
 
         [HttpGet]
@@ -39,8 +37,9 @@ namespace SingularityAssesment.Controllers
             return await _context.User.ToListAsync();
         }
 
-        [HttpPost("CreateUser")]
-        public IActionResult CreateUser([FromBody] RegisterDto model)
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public IActionResult Register([FromBody] RegisterDto model)
         {
             var user = _context.User.SingleOrDefault(u => u.UserName == model.UserName);
             var isUserNameUnique = user == null ? true : false;
@@ -49,36 +48,18 @@ namespace SingularityAssesment.Controllers
                 return BadRequest(new { message = "UserName is already exists" });
             }
 
-            var u = new User
+            var newUser = new User
             {
                 UserName = model.UserName,
                 Password = model.Password,
                 Role = model.Role
             };
-            _context.User.Add(u);
+            _context.User.Add(newUser);
             _context.SaveChanges();
 
-            u.Password = "";
+            newUser.Password = "";
 
-
-            return Ok(u);
-        }
-
-        [HttpDelete("RemoveUser/{id}")]
-        public async Task<ActionResult<User>> RemoveUserAsync(int id)
-        {
-            var user = await _context.User.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-
-            _context.User.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return user;
-
+            return Ok(newUser);
         }
 
         [AllowAnonymous]
@@ -135,10 +116,8 @@ namespace SingularityAssesment.Controllers
             return Ok(user);
         }
 
-
-        [AllowAnonymous]
-        [HttpPost("register")]
-        public IActionResult Register([FromBody] RegisterDto model)
+        [HttpPost("CreateUser")]
+        public IActionResult CreateUser([FromBody] RegisterDto model)
         {
             var user = _context.User.SingleOrDefault(u => u.UserName == model.UserName);
             var isUserNameUnique = user == null ? true : false;
@@ -147,18 +126,37 @@ namespace SingularityAssesment.Controllers
                 return BadRequest(new { message = "UserName is already exists" });
             }
 
-            var newUser = new User
+            var u = new User
             {
                 UserName = model.UserName,
                 Password = model.Password,
                 Role = model.Role
             };
-            _context.User.Add(newUser);
+            _context.User.Add(u);
             _context.SaveChanges();
 
-            newUser.Password = "";
+            u.Password = "";
 
-            return Ok(newUser);
+
+            return Ok(u);
         }
+
+        [HttpDelete("RemoveUser/{id}")]
+        public async Task<ActionResult<User>> RemoveUserAsync(int id)
+        {
+            var user = await _context.User.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+
+            _context.User.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return user;
+
+        }
+
     }
 }
